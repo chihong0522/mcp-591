@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from mcp_591.client import Client591
+from mcp_591.client import Client591, _REQUEST_TIMEOUT
 from mcp_591.server import (
     _LISTING_KEYS,
     _RENT_LISTING_KEYS,
@@ -29,6 +29,14 @@ def _mock_resp(data: dict) -> MagicMock:
     resp.json.return_value = data
     resp.raise_for_status.return_value = None
     return resp
+
+
+def test_rent_requests_verify_tls_and_time_out():
+    client = Client591(device_id="test")
+    assert client._session.verify is True
+    with patch.object(client._session, "get", return_value=_mock_resp({"data": {"items": []}})) as get:
+        client.search_rent(region_id=3, section_ids=[26])
+    assert get.call_args.kwargs["timeout"] == _REQUEST_TIMEOUT
 
 
 class TestFilterListing:

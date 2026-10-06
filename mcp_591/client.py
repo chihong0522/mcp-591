@@ -1,15 +1,14 @@
 import time
 import uuid
-import warnings
 
 import requests
-from urllib3.exceptions import InsecureRequestWarning
 
 _MOBILE_UA = (
     "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) "
     "AppleWebKit/537.36 (KHTML, like Gecko) "
     "Chrome/147.0.0.0 Mobile Safari/537.36"
 )
+_REQUEST_TIMEOUT = 15
 
 
 class Client591:
@@ -31,9 +30,6 @@ class Client591:
             }
         )
         self._session.cookies.set("T591_TOKEN", self._device_id)
-        # 591's cert is missing Subject Key Identifier; suppress the noise
-        self._session.verify = False
-        warnings.filterwarnings("ignore", category=InsecureRequestWarning)
 
     def search_sale(
         self,
@@ -95,7 +91,7 @@ class Client591:
         if keywords is not None:
             params["keywords"] = keywords
 
-        resp = self._session.get(self._SALE_URL, params=params)
+        resp = self._session.get(self._SALE_URL, params=params, timeout=_REQUEST_TIMEOUT)
         resp.raise_for_status()
         return resp.json()
 
@@ -140,7 +136,7 @@ class Client591:
         if keywords is not None:
             params["keywords"] = keywords
 
-        resp = self._session.get(self._RENT_URL, params=params)
+        resp = self._session.get(self._RENT_URL, params=params, timeout=_REQUEST_TIMEOUT)
         resp.raise_for_status()
         return resp.json()
 
@@ -150,7 +146,9 @@ class Client591:
         Args:
             post_id: Listing ID from search_rent results. e.g. 21044696
         """
-        resp = self._session.get(self._RENT_DETAIL_URL, params={"id": str(post_id)})
+        resp = self._session.get(
+            self._RENT_DETAIL_URL, params={"id": str(post_id)}, timeout=_REQUEST_TIMEOUT
+        )
         resp.raise_for_status()
         return resp.json()
 
@@ -167,7 +165,7 @@ class Client591:
             "id": id_str,
             "device": "touch",
             "device_id": self._device_id,
-        })
+        }, timeout=_REQUEST_TIMEOUT)
         resp.raise_for_status()
         return resp.json()
 
